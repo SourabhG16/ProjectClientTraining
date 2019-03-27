@@ -1,0 +1,4 @@
+#Tue Mar 19 00:10:15 IST 2019
+base.0=C\:\\Users\\Roggh\\Desktop\\clientTraining\\platforms\\android\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\0
+path.0=classes.dex
+renamed.0=classes.dex
