@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { catchError } from 'rxjs/operators';
 import { AlertController } from "@ionic/angular";
 import { BehaviorSubject } from "rxjs";
+import { Config } from "config";
 @Injectable({
   providedIn: 'root'
 })
@@ -13,7 +14,7 @@ export class RouteService {
   {
     this.Json1.next(obj);
   }
-  constructor(private http:HttpClient,private alertController:AlertController) {
+  constructor(private http:HttpClient,private alertController:AlertController,public Config:Config) {
 
    }
    Source(latitude,longitude)
@@ -86,6 +87,20 @@ tripDuration(data)
    })
  );
 }
+findDur(lat1,long1,lat2,long2,apik)
+{
+  let key=apik
+  let qry='https://api.mapbox.com/directions/v5/mapbox/cycling/'+long1+','+lat1+','+long2+','+lat2+'?geometries=geojson&access_token='+key
+  let out=this.http.get(qry).pipe(
+    catchError(e => {
+      this.showAlert(e.error.msg);
+      throw new Error(e);
+    })
+  );
+  let ot=JSON.parse(out["body"]);
+  ot=ot.routes[0].duration/60
+  let ot1=JSON.stringify(ot)
+  console.log(ot1);
+  return ot1;
 }
-
-
+}

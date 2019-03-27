@@ -1,6 +1,6 @@
 import { Component , ElementRef, NgZone, ViewChild, OnInit} from '@angular/core';
 import {Geolocation} from '@ionic-native/geolocation/ngx';
-import {ModalController} from '@ionic/angular';
+import {ModalController, AlertController} from '@ionic/angular';
 import {ModalPage} from '../modal/modal.page';
 import { Config } from "../../../config";
 import { GlobalVarService } from '../global-var.service';
@@ -33,11 +33,14 @@ export class Tab1Page implements OnInit {
   markerOptions: any = {position: null, map: null, title: null};
   marker: any;
   api:any;
+  api2:any;
 constructor(public zone: NgZone, public geolocation: Geolocation,public modalController: ModalController,public Config:Config, public global_var: GlobalVarService,private routeservice: RouteService,
-  private Router:Router,private Http:HttpClient) {
+  private Router:Router,private Http:HttpClient,private alertController:AlertController) {
   /*load google map script dynamically */
     var apiKey=Config.apireturn();
+    var apiKey2=Config.api2return();
     this.api=apiKey;
+    this.api2=apiKey2;
     const script = document.createElement('script');
     script.id = 'googleMap';
     if (apiKey) {
@@ -124,9 +127,34 @@ async RouteTO()
     this.map = new google.maps.Map(this.mapElement.nativeElement, this.mapOptions);   
     var directionsService = new google.maps.DirectionsService();
     var directionsDisplay = new google.maps.DirectionsRenderer();
-      if (typeof this.lat1 == "undefined" || typeof this.long1 == "undefined") {
+      if (typeof this.lat1 == "undefined" || typeof this.long1 == "undefined" || this.lat1 == null || this.long1 == null) {
         await this.RouteTO();
       };
+/*
+      let qry='https://api.mapbox.com/directions/v5/mapbox/cycling/'+this.long1+','+this.lat1+','+this.long2+','+this.lat2+'?geometries=geojson&access_token='+this.api2;
+      let out=this.Http.get(qry).pipe(
+        catchError(e => {
+          this.showAlert(e.error.msg);
+          throw new Error(e);
+        })
+      );
+      let ot=JSON.parse(out["body"]);
+      ot=ot.routes[0].duration/60
+      let ot1=JSON.stringify(ot)
+     */
+    console.log("before dur");
+    console.log("user:"+this.global_var.LoggedUser);
+    this.data=this.data.concat(this.lat1,this.long1,this.lat2,this.long2,this.global_var.LoggedUser);
+    setTimeout(() => {
+      this.routeservice.tripDuration(this.data).subscribe(res=>{
+        //console.log(res);
+        this.lat1=null;
+        this.long1=null;
+      });
+    }, 3000);
+
+    console.log("after dur");
+      /*
       var start = new google.maps.LatLng(this.lat1,this.long1);
       var end = new google.maps.LatLng(this.lat2,this.long2);
       directionsService.route({
@@ -157,6 +185,9 @@ async RouteTO()
           window.alert('Directions request failed due to '+status);
         }
       });
+      */
+      
+
       /*
      console.log(this.lat1,this.long1);
      let url: string ="https://maps.googleapis.com/maps/api/directions/json?&origin="+this.lat1+","+this.long1+"&destination="+this.lat2+","+this.long2+"&key="+this.api;
@@ -166,5 +197,13 @@ async RouteTO()
       })
      await this.directionsDisplay.setDirections(this.response);*/
     }
-  
+    showAlert(msg) {
+      let alert = this.alertController.create({
+          message: msg,
+          header: 'Error',
+          buttons: ['OK']
+        });
+        alert.then(alert => alert.present());
+      }
 }
+
